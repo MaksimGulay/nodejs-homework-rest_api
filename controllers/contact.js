@@ -2,6 +2,7 @@ const Contact = require("../models/contact");
 const { contactSchema, favoriteSchema } = require("../schemas/contacts");
 
 async function getContacts(req, res, next) {
+  console.log({ user: req.user });
   try {
     const contacts = await Contact.find().exec();
     res.send(contacts);
