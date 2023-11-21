@@ -23,4 +23,13 @@ const contactSchema = Joi.object({
     .required(),
 });
 
-module.exports = contactSchema;
+const favoriteSchema = Joi.object({
+  favorite: Joi.boolean().required().messages({
+    "any.required": "Missing field favorite",
+  }),
+});
+
+module.exports = {
+  contactSchema,
+  favoriteSchema,
+};
