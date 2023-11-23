@@ -9,4 +9,6 @@ const jsonParser = express.json();
 router.post("/register", jsonParser, userController.register);
 router.post("/login", jsonParser, userController.login);
 router.post("/logout", user, userController.logout);
+router.get("/current", user, userController.current);
+
 module.exports = router;

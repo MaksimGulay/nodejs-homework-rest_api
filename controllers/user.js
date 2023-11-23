@@ -83,7 +83,24 @@ async function logout(req, res, next) {
   try {
     await User.findByIdAndUpdate(req.user.id, { token: null }).exec();
 
-    res.status(204).json.end();
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function current(req, res, next) {
+  try {
+    const user = await User.findOne().exec();
+    if (!user) {
+      return res.status(401).json({
+        message: "Not authorized",
+      });
+    }
+    res.json({
+      email: user.email,
+      subscription: user.subscription,
+    });
   } catch (error) {
     next(error);
   }
@@ -93,4 +110,5 @@ module.exports = {
   register,
   login,
   logout,
+  current,
 };
