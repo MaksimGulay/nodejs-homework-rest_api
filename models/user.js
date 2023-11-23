@@ -11,14 +11,17 @@ const userShema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
-      //   unique: true,
+      unique: true,
     },
     subscription: {
       type: String,
       enum: ["starter", "pro", "business"],
       default: "starter",
     },
-    token: String,
+    token: {
+      type: String,
+      default: null,
+    },
   },
   { versionKey: false }
 );
