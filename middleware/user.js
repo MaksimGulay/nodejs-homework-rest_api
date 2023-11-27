@@ -8,15 +8,15 @@ function user(req, res, next) {
   const [bearer, token] = userHeader.split(" ", 2);
 
   if (typeof userHeader === "undefined") {
-    res.status(401).send({ message: "Not authorized" });
+    return res.status(401).send({ message: "Not authorized" });
   }
   if (bearer !== "Bearer") {
-    res.status(401).send({ message: "Invalid token" });
+    return res.status(401).send({ message: "Invalid token" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, decode) => {
     if (err) {
-      res.status(401).send({ message: "Not authorized" });
+      return res.status(401).send({ message: "Not authorized" });
     }
 
     try {
@@ -35,7 +35,7 @@ function user(req, res, next) {
 
       next();
     } catch (error) {
-      next(error);
+      return next(error);
     }
   });
 }

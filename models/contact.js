@@ -1,3 +1,5 @@
+// models/contact.js
+
 const mongoose = require("mongoose");
 
 const contactSheme = new mongoose.Schema(

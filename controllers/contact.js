@@ -1,3 +1,5 @@
+// controllers/contact.js
+
 const Contact = require("../models/contact");
 const { contactSchema, favoriteSchema } = require("../schemas/contacts");
 
