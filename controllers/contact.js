@@ -1,9 +1,13 @@
+// controllers/contact.js
+
 const Contact = require("../models/contact");
 const { contactSchema, favoriteSchema } = require("../schemas/contacts");
 
 async function getContacts(req, res, next) {
+  const owner = req.user.id;
+  console.log({ user: req.user });
   try {
-    const contacts = await Contact.find().exec();
+    const contacts = await Contact.find({ owner }).exec();
     res.send(contacts);
   } catch (error) {
     next(error);
@@ -15,6 +19,11 @@ async function getContact(req, res, next) {
 
   try {
     const contact = await Contact.findById(id).exec();
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
     if (contact === null) {
       return res.status(404).json({ message: "Contact not found" });
     }
@@ -27,8 +36,11 @@ async function getContact(req, res, next) {
 async function createContact(req, res, next) {
   try {
     const { name, email, phone } = req.body;
+    const owner = req.user.id;
 
-    const validation = contactSchema.validate(req.body, { abortEarly: false });
+    const validation = contactSchema.validate(req.body, req.user.id, {
+      abortEarly: false,
+    });
 
     if (validation.error) {
       const errorMessage = validation.error.details
@@ -43,8 +55,8 @@ async function createContact(req, res, next) {
       name,
       email,
       phone,
+      owner,
     });
-
     const savedContact = await newContact.save();
 
     res.status(201).json(savedContact);
@@ -57,8 +69,17 @@ async function deleteContact(req, res, next) {
   try {
     const { id } = req.params;
 
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     const deletedContact = await Contact.findByIdAndDelete(id);
-    console.log(deletedContact);
 
     if (!deletedContact) {
       return res.status(404).json({ message: "Contact not found" });
@@ -84,6 +105,16 @@ async function updateContact(req, res, next) {
       return res
         .status(400)
         .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
     }
 
     const updateContact = await Contact.findByIdAndUpdate(
@@ -122,6 +153,16 @@ async function updateStatusContact(req, res, next) {
       return res
         .status(400)
         .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
     }
 
     const updatedContact = await Contact.findByIdAndUpdate(
