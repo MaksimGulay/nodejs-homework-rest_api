@@ -69,6 +69,16 @@ async function deleteContact(req, res, next) {
   try {
     const { id } = req.params;
 
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     const deletedContact = await Contact.findByIdAndDelete(id);
 
     if (!deletedContact) {
@@ -95,6 +105,16 @@ async function updateContact(req, res, next) {
       return res
         .status(400)
         .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
     }
 
     const updateContact = await Contact.findByIdAndUpdate(
@@ -133,6 +153,16 @@ async function updateStatusContact(req, res, next) {
       return res
         .status(400)
         .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    if (contact.owner.toString() !== req.user.id.toString()) {
+      return res.status(401).json({ message: "Not authorized" });
     }
 
     const updatedContact = await Contact.findByIdAndUpdate(
