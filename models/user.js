@@ -2,6 +2,8 @@
 
 const mongoose = require("mongoose");
 
+const gravatar = require("gravatar");
+
 const userShema = new mongoose.Schema(
   {
     password: {
@@ -29,5 +31,12 @@ const userShema = new mongoose.Schema(
   },
   { versionKey: false }
 );
+
+userShema.pre("save", async function (next) {
+  if (this.isModified("email")) {
+    this.avatarURL = gravatar.url(this.email, { s: "250", d: "retro" }, true);
+  }
+  next();
+});
 
 module.exports = mongoose.model("User", userShema);
