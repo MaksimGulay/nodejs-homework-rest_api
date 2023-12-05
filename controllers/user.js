@@ -4,6 +4,8 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userShema = require("../schemas/user");
+const sendEmail = require(".././helpers/sendEmail");
+const crypto = require("node:crypto");
 
 async function register(req, res, next) {
   const { email, password } = req.body;
@@ -26,7 +28,20 @@ async function register(req, res, next) {
     }
 
     const passwardHash = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ email, password: passwardHash });
+
+    const verifyToken = crypto.randomUUID();
+    await sendEmail({
+      to: email,
+      subject: "Welcome to your contacts book",
+      html: `To confirm your registration please click on <a href="http://localhost:3000/api/users/verify/${verifyToken}">link</a>`,
+      text: `To cofrirm your registration please click on the link http://localhost:3000/api/users/verify/${verifyToken}`,
+    });
+
+    const newUser = await User.create({
+      email,
+      verifyToken,
+      password: passwardHash,
+    });
     res.status(201).json({
       user: {
         email: newUser.email,
@@ -61,6 +76,10 @@ async function login(req, res, next) {
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch === false) {
       return res.status(401).json({ massage: "Email or password is wrong" });
+    }
+
+    if (user.verify === false) {
+      return res.status(401).send({ message: "Your account is not verified" });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -108,9 +127,27 @@ async function current(req, res, next) {
   }
 }
 
+async function verify(req, res, next) {
+  const { token } = req.params;
+  try {
+    const user = await User.findOne({ verifyToken: token }).exec();
+
+    if (user === null) {
+      return res.status(404).send({ message: "Not foundd" });
+    }
+
+    await User.findByIdAndUpdate(user._id, { verify: true, verifyToken: null });
+
+    res.send({ massage: "Email confirm succesfully" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register,
   login,
   logout,
   current,
+  verify,
 };
