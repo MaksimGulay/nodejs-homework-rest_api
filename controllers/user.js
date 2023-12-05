@@ -31,6 +31,7 @@ async function register(req, res, next) {
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
+        avatarURL: newUser.avatarURL,
       },
     });
   } catch (error) {
@@ -91,7 +92,8 @@ async function logout(req, res, next) {
 
 async function current(req, res, next) {
   try {
-    const user = await User.findOne().exec();
+    const userId = req.user.id;
+    const user = await User.findById(userId).exec();
     if (!user) {
       return res.status(401).json({
         message: "Not authorized",
