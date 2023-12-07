@@ -4,6 +4,7 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userShema = require("../schemas/user");
+const userVerify = require("../schemas/userVerify");
 const sendEmail = require(".././helpers/sendEmail");
 const crypto = require("node:crypto");
 
@@ -144,10 +145,49 @@ async function verify(req, res, next) {
   }
 }
 
+async function reverify(req, res, next) {
+  const { email } = req.body;
+  try {
+    const validation = userVerify.validate(req.body);
+    if (validation.error) {
+      const errorMessage = validation.error.details
+        .map((error) => error.message)
+        .join(", ");
+      return res
+        .status(400)
+        .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const user = await User.findOne({ email }).exec();
+
+    if (user.verify === true) {
+      return res
+        .status(400)
+        .send({ message: "Verification has already been passed" });
+    }
+
+    if (user.verify === false) {
+      const verifyToken = user.verifyToken;
+      await sendEmail({
+        to: email,
+        subject: "Welcome to your contacts book",
+        html: `To confirm your registration please click on <a href="http://localhost:3000/api/users/verify/${verifyToken}">link</a>`,
+        text: `To cofrirm your registration please click on the link http://localhost:3000/api/users/verify/${verifyToken}`,
+      });
+    }
+    return res.send({
+      message: "Verification email sent",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register,
   login,
   logout,
   current,
   verify,
+  reverify,
 };
